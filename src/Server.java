@@ -15,7 +15,7 @@ public class Server {
     public Server() {
         try {
             ServerSocketFactory sslServerSocketFactory = SSLServerSocketFactory.getDefault();
-            serverSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(1040);
+            serverSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(1041);
             String[] supportedCipherSuites = serverSocket.getSupportedCipherSuites();
             serverSocket.setEnabledCipherSuites(supportedCipherSuites);
             this.isRunning = true;
@@ -52,5 +52,10 @@ public class Server {
     }
     public void close(){
         isRunning = false;
+    }
+
+    public static void main(String[] args) {
+        Server server = new Server();
+        server.open();
     }
 }

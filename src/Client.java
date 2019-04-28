@@ -33,7 +33,7 @@ public class Client {
     public Client(String hostServer){
         isRunning = false;
         connexion=null;
-        port = 1040;
+        port = 1041;
         connexionFactory = SSLSocketFactory.getDefault();
         try {
             connexion = (SSLSocket) connexionFactory.createSocket(hostServer, port);
@@ -80,7 +80,7 @@ public class Client {
             }
             byteIn = copyOf(byteIn, sizeIn);
             msgReceived = new String(byteIn, UTF_8);
-            System.out.println("/* Réponse du serveur :" + msgReceived + "*/");
+            System.out.println("/* ++Réponse du serveur :" + msgReceived + "*/");
             String[] msgSplit= msgReceived.split(" ");
             if (msgSplit[0].contains("+OK") && msgSplit.length >= 5) {
                 timeStamp = msgSplit[4];

@@ -30,6 +30,7 @@ public class Communication implements Runnable {
         this.mails = new HashSet<>();
         this.receivingData = false;
         resetTimer();
+        System.out.println("end  com");
     }
 
     public void resetTimer() {
@@ -54,13 +55,20 @@ public class Communication implements Runnable {
             in = clientSocket.getInputStream();
             if (clientSocket.isConnected()) {
                 try {
+                    System.out.println("run if");
                     out = clientSocket.getOutputStream();
                     String welcome = "+OK SMTP Server ready";
+                    System.out.println("before write:");
                     out.write(welcome.getBytes("UTF-8"));
+                    System.out.println("beforeflush");
                     out.flush();
+                    System.out.println("envoyé :" + welcome);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            }
+            else{
+                System.out.println("run else");
             }
         } catch (IOException e) {
             e.printStackTrace();
