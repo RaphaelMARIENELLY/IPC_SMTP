@@ -30,7 +30,6 @@ public class Communication implements Runnable {
         this.mails = new HashSet<>();
         this.receivingData = false;
         resetTimer();
-        System.out.println("end  com");
     }
 
     public void resetTimer() {
@@ -55,26 +54,18 @@ public class Communication implements Runnable {
             in = clientSocket.getInputStream();
             if (clientSocket.isConnected()) {
                 try {
-                    System.out.println("run if");
                     out = clientSocket.getOutputStream();
-                    String welcome = "+OK SMTP Server ready";
-                    System.out.println("before write:");
+                    String welcome = "220 SMTP Server ready";
                     out.write(welcome.getBytes("UTF-8"));
-                    System.out.println("beforeflush");
                     out.flush();
-                    System.out.println("envoyé :" + welcome);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
-            else{
-                System.out.println("run else");
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
         while (!clientSocket.isClosed()) {
-            System.out.println("Reading InputStream.");
             byte[] byteIn = new byte[512];
             try {
                 in.read(byteIn);
@@ -87,7 +78,7 @@ public class Communication implements Runnable {
             }
             byteIn = copyOf(byteIn, sizeIn);
             String clientInput = new String(byteIn, UTF_8);
-            System.out.println("Server received " + clientInput);
+            System.out.println("Received : " + clientInput);
             if (clientInput.length() > 0) {
                 String commandName = clientInput.substring(0, 4);
                 try {
@@ -191,6 +182,9 @@ public class Communication implements Runnable {
             e.printStackTrace();
         }
         PrintWriter printWriter = new PrintWriter(fileWriter);
+        String recipient = new File(mailPath).getParentFile().getName();
+        printWriter.println("To: " + recipient);
+        printWriter.println("From: <" + sender + ">");
         printWriter.println(textToAppend);
         printWriter.close();
         int inputSize = byteIn.length;
@@ -215,13 +209,12 @@ public class Communication implements Runnable {
         String sender = clientInput.substring(separator2);
         sender = sender.replace("<", "");
         sender = sender.replace(">", "");
-        this.sender = sender;
+        this.sender = sender.trim();
     }
 
     private void updateClientDNS(String clientInput) {
         int separator1 = clientInput.indexOf(" ");
-        int separator2 = clientInput.indexOf(" ", separator1 + 1);
-        String clientDNS = clientInput.substring(separator1 + 1, separator2);
+        String clientDNS = clientInput.substring(separator1 + 1);
         this.clientDNS = clientDNS;
     }
 

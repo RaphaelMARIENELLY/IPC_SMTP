@@ -1,3 +1,6 @@
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -8,33 +11,47 @@ import static java.util.Arrays.copyOf;
 public class Client2 implements Runnable{
 
     private static final String CLIENT_DNS = "alpha.edu";
-    private Socket connexion;
+    private SSLSocket connexion;
     private int port;
     private OutputStream out;
     private String msgToSend;
     private InputStream in;
     private String msgReceived;
     private Scanner sc;
+    private SocketFactory connexionFactory;
 
     public Client2(String hostServer){
         connexion=null;
         port = 1041;
-        connexion = new Socket();
+        connexionFactory = SSLSocketFactory.getDefault();
+        try {
+            connexion = (SSLSocket) connexionFactory.createSocket(hostServer, port);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         sc = new Scanner(System.in);
 
         if (!connexion.isConnected()){
             try {
                 connexion.connect(new InetSocketAddress(hostServer, port));
-                System.out.println("/* Connexion tcp .*/");
                 out = connexion.getOutputStream();
                 in = connexion.getInputStream();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        System.out.println("go listen");
+        else{
+            String[] suites = connexion.getSupportedCipherSuites();
+            connexion.setEnabledCipherSuites(suites);
+            try {
+                out = connexion.getOutputStream();
+                in = connexion.getInputStream();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            System.out.println("/* Connexion tcp réussie.*/");
+        }
         listen();
-        System.out.println("end listen");
     }
 
     public void run(){
@@ -47,7 +64,7 @@ public class Client2 implements Runnable{
 
     public void ready(){
         switch (msgReceived.substring(0, 3)) {
-            case "220":
+            case "250":
                 System.out.println("Veuillez choisir l'action à réaliser.");
                 System.out.println("1 : Envoyer un mail");
                 System.out.println("2 : Quitter");
@@ -65,7 +82,7 @@ public class Client2 implements Runnable{
                 break;
 
             default:
-            System.out.println("ERREUR EHLO :" + msgReceived);
+                System.out.println("ERREUR EHLO :" + msgReceived);
                 break;
         }
     }
@@ -81,13 +98,14 @@ public class Client2 implements Runnable{
                 if (choix.equals("1")) {
                     addRecipient();
                 } else if (choix.equals("2")) {
-                    ready();
+                    reset();
                 }
                 else{
                     quit();
                 }
                 break;
             case "550":
+                msgReceived = "250";
                 ready();
                 break;
         }
@@ -133,23 +151,24 @@ public class Client2 implements Runnable{
                     data();
 
                 } else if (choix.equals("3")) {
-                    ready();
+                    reset();
                 }
                 else{
                     quit();
                 }
                 break;
             case "550":
-                //todo
+                System.out.println("Adresse " + destinataire + " erronée");
+                addRecipient();
                 break;
         }
     }
 
     public void data() {
         switch (msgReceived.substring(0, 3)) {
-            case "250":
+            case "354":
                 System.out.println("Ecrivez le contenu du mail");
-                msgToSend = sc.nextLine() + ".\n";
+                msgToSend = sc.nextLine() + "\r\n.\r\n";
                 send();
                 listen();
                 run();
@@ -177,20 +196,24 @@ public class Client2 implements Runnable{
     public void listen() {
         byte[] byteIn = new byte[512];
         try {
-            System.out.println("read");
             in.read(byteIn);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("wile");
         int sizeIn = 0;
         while (sizeIn < 512 && byteIn[sizeIn] != 0) {
             sizeIn++;
         }
-        System.out.println("end whle");
         byteIn = copyOf(byteIn, sizeIn);
         msgReceived = new String(byteIn, UTF_8);
         System.out.println("/* Message reçu : \n" + msgReceived + " */");
+    }
+
+    public void reset() {
+        msgToSend = "RSET";
+        send();
+        listen();
+        ready();
     }
 }
 
