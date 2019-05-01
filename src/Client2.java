@@ -22,10 +22,10 @@ public class Client2 implements Runnable{
 
     public Client2(String hostServer){
         connexion=null;
-        port = 1041;
+        port = 1025;
         connexionFactory = SSLSocketFactory.getDefault();
         try {
-            connexion = (SSLSocket) connexionFactory.createSocket(hostServer, port);
+            connexion = (SSLSocket) connexionFactory.createSocket(hostServer , port);
         } catch (IOException e) {
             e.printStackTrace();
         }
